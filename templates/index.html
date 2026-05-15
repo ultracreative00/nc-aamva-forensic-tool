@@ -104,13 +104,14 @@ body {
   overflow: hidden;
 }
 
-/* ── Panel ── */
+/* ── Input Panel ── */
 .panel {
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 .panel-header {
   padding: 16px 20px 12px;
@@ -121,7 +122,14 @@ body {
   flex-shrink: 0;
 }
 .panel-title { font-size: 13px; font-weight: 600; color: var(--text); }
-.panel-body { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 /* ── Tabs ── */
 .tabs {
@@ -195,7 +203,14 @@ textarea { min-height: 140px; }
 .dropzone-icon { margin-bottom: 10px; color: var(--muted); }
 .dropzone-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
 .dropzone-sub { font-size: 12px; color: var(--muted); }
-.dropzone-preview { margin-top: 12px; border-radius: var(--radius); overflow: hidden; display: none; max-height: 140px; position: relative; }
+.dropzone-preview {
+  margin-top: 12px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: none;
+  max-height: 140px;
+  position: relative;
+}
 .dropzone-preview img { width: 100%; object-fit: contain; max-height: 140px; }
 .dropzone-preview .remove-img {
   position: absolute; top: 6px; right: 6px;
@@ -227,7 +242,17 @@ textarea { min-height: 140px; }
 .loading .btn-text { display: none; }
 
 /* ── Results panel ── */
-.results { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; }
+.results {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  /* CRITICAL: results must be a block scroll context, not a clipping parent */
+  min-height: 0;
+}
 
 .placeholder {
   display: flex; flex-direction: column; align-items: center;
@@ -244,11 +269,12 @@ textarea { min-height: 140px; }
   padding: 20px 24px;
   display: flex; align-items: center; gap: 16px;
   border: 1px solid;
+  flex-shrink: 0;
 }
-.verdict-banner.AUTHENTIC  { background: var(--green-bg);  border-color: var(--green-border); }
-.verdict-banner.UNAUTHENTIC{ background: var(--red-bg);    border-color: var(--red-border);   }
-.verdict-banner.INCONCLUSIVE{background: var(--yellow-bg); border-color: var(--yellow-border);}
-.verdict-banner.ERROR      { background: var(--surface2);  border-color: var(--border);       }
+.verdict-banner.AUTHENTIC   { background: var(--green-bg);  border-color: var(--green-border); }
+.verdict-banner.UNAUTHENTIC { background: var(--red-bg);    border-color: var(--red-border);   }
+.verdict-banner.INCONCLUSIVE{ background: var(--yellow-bg); border-color: var(--yellow-border);}
+.verdict-banner.ERROR       { background: var(--surface2);  border-color: var(--border);       }
 .verdict-icon { flex-shrink: 0; font-size: 32px; }
 .verdict-body { flex: 1; min-width: 0; }
 .verdict-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
@@ -282,18 +308,21 @@ textarea { min-height: 140px; }
   border-radius: var(--radius); padding: 10px 14px;
   font-size: 12px; color: var(--red);
   display: flex; align-items: flex-start; gap: 8px;
+  flex-shrink: 0;
 }
 .hard-fail code { font-family: var(--mono); font-size: 11px; color: #ffa5a0; word-break: break-all; }
 
 /* ── Generator flags ── */
 .gen-flags {
   background: var(--orange-bg); border: 1px solid var(--orange-border);
-  border-radius: var(--radius); overflow: hidden;
+  border-radius: var(--radius);
+  flex-shrink: 0;
 }
 .gen-flags-header {
   padding: 8px 14px; font-size: 12px; font-weight: 700;
   color: var(--orange); border-bottom: 1px solid var(--orange-border);
   display: flex; align-items: center; gap: 6px;
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 .gen-flags ul { list-style: none; }
 .gen-flags ul li {
@@ -302,41 +331,104 @@ textarea { min-height: 140px; }
   word-break: break-word;
 }
 .gen-flags ul li:last-child { border-bottom: none; }
-.gen-flags ul li::before { content: '⚑  '; }
+.gen-flags ul li::before { content: '\2691  '; }
 
-/* ── Cards ── */
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+/* ────────────────────────────────────────────────────────────
+   CARDS  — the core dropdown fix
+   KEY RULES:
+   1. NO overflow:hidden on .card  → lets body expand freely
+   2. .card-body gets overflow-y:auto + max-height per variant
+   3. .card.collapsed hides via max-height:0 + overflow:hidden
+      on the body only, NOT the card wrapper
+   ──────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  /* REMOVED overflow:hidden — it was clipping expanded bodies */
+  flex-shrink: 0;
+}
 .card-header {
-  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  /* Keep top-radius on header */
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: 1px solid var(--border);
   display: flex; align-items: center; gap: 8px;
-  cursor: pointer; user-select: none; background: var(--surface2);
+  cursor: pointer; user-select: none;
+  background: var(--surface2);
+  /* When collapsed the header IS the full card — round all corners */
+}
+.card.collapsed .card-header {
+  border-bottom: none;
+  border-radius: var(--radius-lg);
 }
 .card-header:hover { background: #1e252e; }
-.card-title { font-size: 13px; font-weight: 600; flex: 1; }
+.card-title { font-size: 13px; font-weight: 600; flex: 1; min-width: 0; }
 .card-count {
   font-size: 11px; padding: 1px 7px; border-radius: 20px;
   background: var(--faint); color: var(--muted); font-weight: 600;
+  white-space: nowrap; flex-shrink: 0;
 }
-.card-count.fail { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+.card-count.fail { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
 .card-count.pass { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-.card-chevron { color: var(--muted); transition: transform 0.2s; flex-shrink: 0; }
+.card-chevron {
+  color: var(--muted);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
 .card.collapsed .card-chevron { transform: rotate(-90deg); }
-.card.collapsed .card-body { display: none; }
-.card-body { padding: 0; }
+
+/* Card body — scrollable, shown/hidden cleanly */
+.card-body {
+  padding: 0;
+  overflow: hidden;          /* hide when max-height:0 */
+  max-height: 9999px;        /* expanded = effectively unlimited */
+  transition: max-height 0.3s ease;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.card.collapsed .card-body {
+  max-height: 0;
+}
+
+/* Per-section scroll caps so very long lists don't take over the page */
+.card-body-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 480px;         /* ~20 signal rows before scroll kicks in */
+}
+.card-body-scroll-sm {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 260px;
+}
 
 /* ── Signals table ── */
-.signals-table { width: 100%; border-collapse: collapse; }
+.signals-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;       /* prevents table from blowing past card width */
+}
+.signals-table col.col-status { width: 28px; }
+.signals-table col.col-name   { width: 26%; }
+.signals-table col.col-detail { width: auto; }
+.signals-table col.col-weight { width: 48px; }
 .signals-table tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
-.signals-table td { padding: 8px 14px; vertical-align: top; }
-.sig-status { width: 20px; padding-right: 2px; }
-.sig-icon-pass { font-size: 14px; color: var(--green); }
-.sig-icon-fail { font-size: 14px; color: var(--red); }
-.sig-name { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.signals-table td { padding: 8px 14px; vertical-align: top; overflow: hidden; }
+.sig-status { width: 28px; padding-right: 4px; }
+.sig-icon-pass { font-size: 13px; color: var(--green); display: block; }
+.sig-icon-fail { font-size: 13px; color: var(--red);   display: block; }
+.sig-name {
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  word-break: break-word; white-space: normal;
+}
 .sig-name.fail { color: var(--red); font-weight: 600; }
 .sig-name.pass { color: var(--green); }
 .sig-detail { font-size: 12px; color: var(--muted); word-break: break-word; }
 .sig-detail.fail { color: #ffa5a0; }
-.sig-weight { font-size: 11px; color: var(--faint); text-align: right; white-space: nowrap; }
+.sig-weight {
+  font-size: 11px; color: var(--faint);
+  text-align: right; white-space: nowrap;
+}
 .hard-fail-badge {
   font-size: 10px; padding: 1px 5px; border-radius: 4px;
   background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border);
@@ -344,42 +436,85 @@ textarea { min-height: 140px; }
 }
 
 /* ── Fields grid ── */
-.fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-.field-cell { padding: 8px 14px; border-bottom: 1px solid var(--border); min-width: 0; }
+.fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.field-cell {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+  overflow: hidden;
+}
 .field-cell:nth-child(odd) { border-right: 1px solid var(--border); }
-.field-tag { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--blue); margin-bottom: 1px; }
-.field-label { font-size: 10px; color: var(--faint); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
-.field-val { font-size: 12px; color: var(--text); word-break: break-all; font-family: var(--mono); }
+/* Last two cells — remove bottom border if even count, otherwise last odd row only */
+.field-cell:last-child,
+.field-cell:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+.field-tag  { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--blue); margin-bottom: 1px; }
+.field-label{ font-size: 10px; color: var(--faint); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+.field-val  { font-size: 12px; color: var(--text); word-break: break-all; font-family: var(--mono); }
 
 /* ── Meta grid ── */
-.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  overflow: hidden;
+}
 .meta-cell { background: var(--surface); padding: 10px 14px; }
-.meta-key { font-size: 11px; color: var(--muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
-.meta-val { font-size: 13px; font-weight: 600; font-family: var(--mono); }
+.meta-key  { font-size: 11px; color: var(--muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
+.meta-val  { font-size: 13px; font-weight: 600; font-family: var(--mono); word-break: break-word; }
 
 /* ── Anomalies ── */
 .anomaly-list { list-style: none; }
-.anomaly-list li { padding: 8px 14px; font-size: 12px; color: #ffa5a0; font-family: var(--mono); border-bottom: 1px solid var(--border); word-break: break-word; }
+.anomaly-list li {
+  padding: 8px 14px; font-size: 12px; color: #ffa5a0;
+  font-family: var(--mono); border-bottom: 1px solid var(--border);
+  word-break: break-word;
+}
 .anomaly-list li:last-child { border-bottom: none; }
 
 /* ── Dates row ── */
-.dates-row { display: flex; gap: 12px; flex-wrap: wrap; padding: 12px 14px; }
-.date-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; font-size: 12px; min-width: 0; }
+.dates-row { display: flex; gap: 10px; flex-wrap: wrap; padding: 12px 14px; }
+.date-chip {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 10px; font-size: 12px; min-width: 0;
+}
 .date-chip-key { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
 .date-chip-val { font-family: var(--mono); font-weight: 600; white-space: nowrap; }
 
 /* ── JSON view ── */
 .json-block {
-  background: var(--bg); padding: 14px; font-family: var(--mono);
-  font-size: 11px; line-height: 1.7; overflow-x: auto; overflow-y: auto;
-  white-space: pre; color: var(--muted); max-height: 400px;
+  background: var(--bg);
+  padding: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.7;
+  /* Both axes scroll independently */
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 420px;
+  /* pre: preserves formatting, scrolls horizontally instead of wrapping */
+  white-space: pre;
+  color: var(--muted);
+  /* Rounded bottom to match card */
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  /* Ensure it doesn't clip within its parent */
+  display: block;
 }
 
 /* ── Scan info bar ── */
-.scan-info { display: flex; align-items: center; gap: 16px; padding: 10px 0 0; font-size: 11px; color: var(--faint); flex-wrap: wrap; }
+.scan-info {
+  display: flex; align-items: center; gap: 16px;
+  padding: 10px 0 0; font-size: 11px; color: var(--faint);
+  flex-wrap: wrap; flex-shrink: 0;
+}
 .scan-info span { display: flex; align-items: center; gap: 5px; }
 
-/* ── Scrollbar ── */
+/* ── Custom scrollbars ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 3px; }
@@ -398,18 +533,30 @@ textarea { min-height: 140px; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-  .main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: auto; overflow: visible; }
-  .panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 520px; }
-  .results { min-height: 50vh; overflow-y: auto; }
+  .main {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
+    overflow: visible;
+  }
+  .panel {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 520px;
+  }
+  .results {
+    min-height: 50vh;
+    overflow-y: auto;
+  }
   .fields-grid { grid-template-columns: 1fr; }
-  .meta-grid { grid-template-columns: 1fr; }
+  .meta-grid   { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- Header -->
+  <!-- ── Header ── -->
   <header class="header">
     <div class="header-logo">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -422,13 +569,13 @@ textarea { min-height: 140px; }
     <div class="header-spacer"></div>
     <div class="header-status">
       <span class="status-dot" id="statusDot"></span>
-      <span id="statusText">Connecting…</span>
+      <span id="statusText">Connecting&#8230;</span>
     </div>
   </header>
 
   <div class="main">
 
-    <!-- Input panel -->
+    <!-- ── Input Panel ── -->
     <aside class="panel">
       <div class="panel-header">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
@@ -438,15 +585,15 @@ textarea { min-height: 140px; }
       <div class="panel-body">
         <!-- Tabs -->
         <div class="tabs">
-          <button class="tab active" id="tabText"  onclick="switchTab('text')">📋 Paste Text</button>
-          <button class="tab"        id="tabImage" onclick="switchTab('image')">🖼 Upload Image</button>
+          <button class="tab active" id="tabText"  onclick="switchTab('text')">&#128203; Paste Text</button>
+          <button class="tab"        id="tabImage" onclick="switchTab('image')">&#128444; Upload Image</button>
         </div>
 
         <!-- Text pane -->
         <div id="paneText">
           <div class="field-group">
             <label>Raw Barcode String</label>
-            <textarea id="barcodeInput" placeholder="Paste the raw PDF417 barcode string here…&#10;&#10;Must start with @ (0x40) followed by binary bytes and ANSI header."></textarea>
+            <textarea id="barcodeInput" placeholder="Paste the raw PDF417 barcode string here&#8230;&#10;&#10;Must start with @ (0x40) followed by binary bytes and ANSI header."></textarea>
           </div>
           <div style="display:flex;gap:8px;">
             <button class="btn btn-primary btn-full" id="analyseTextBtn" onclick="analyseText()">
@@ -456,7 +603,7 @@ textarea { min-height: 140px; }
                 Analyse Barcode
               </span>
             </button>
-            <button class="btn btn-ghost" onclick="clearAll()" title="Clear">
+            <button class="btn btn-ghost" onclick="clearAll()" title="Clear all">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             </button>
           </div>
@@ -479,7 +626,7 @@ textarea { min-height: 140px; }
               <div class="dropzone-sub">PNG, JPG, BMP, TIFF supported</div>
               <div class="dropzone-preview" id="imagePreview">
                 <img id="previewImg" src="" alt="Preview">
-                <button class="remove-img" onclick="removeImage(event)">×</button>
+                <button class="remove-img" onclick="removeImage(event)">&#215;</button>
               </div>
             </div>
           </div>
@@ -496,21 +643,22 @@ textarea { min-height: 140px; }
         <div style="font-size:11px;color:var(--faint);line-height:1.7;border-top:1px solid var(--border);padding-top:12px;">
           <strong style="color:var(--muted)">Hard-fail signals</strong> trigger instant
           <span style="color:var(--red)">UNAUTHENTIC</span> regardless of score:<br>
-          tilde-escape encoding · wrong header bytes · unknown IIN · missing DL subfile · null-byte padding
+          tilde-escape encoding &middot; wrong header bytes &middot; unknown IIN &middot; missing DL subfile &middot; null-byte padding
           <br><br>
           <strong style="color:var(--muted)">Verdict thresholds (v5.0):</strong><br>
-          ≥93% → <span style="color:var(--green)">AUTHENTIC</span> &nbsp;·&nbsp;
-          70–92% → <span style="color:var(--yellow)">INCONCLUSIVE</span> &nbsp;·&nbsp;
-          &lt;70% → <span style="color:var(--red)">UNAUTHENTIC</span>
+          &ge;93% &rarr; <span style="color:var(--green)">AUTHENTIC</span> &nbsp;&middot;&nbsp;
+          70&ndash;92% &rarr; <span style="color:var(--yellow)">INCONCLUSIVE</span> &nbsp;&middot;&nbsp;
+          &lt;70% &rarr; <span style="color:var(--red)">UNAUTHENTIC</span>
         </div>
       </div>
     </aside>
 
-    <!-- Results -->
+    <!-- ── Results Panel ── -->
     <section class="results" id="results">
       <div class="placeholder" id="placeholder">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
           <rect x="3" y="14" width="7" height="7" rx="1"/>
           <path d="M14 14h3v3M17 14h3M17 17v3M14 17h3"/>
         </svg>
@@ -528,7 +676,7 @@ textarea { min-height: 140px; }
 const API = '';
 let currentFile = null;
 
-// ── Tab switching ──────────────────────────────────────────
+/* ── Tab switching ─────────────────────────────────────── */
 function switchTab(tab) {
   document.getElementById('paneText').style.display  = tab === 'text'  ? '' : 'none';
   document.getElementById('paneImage').style.display = tab === 'image' ? '' : 'none';
@@ -536,7 +684,7 @@ function switchTab(tab) {
   document.getElementById('tabImage').classList.toggle('active', tab === 'image');
 }
 
-// ── File handling ──────────────────────────────────────────
+/* ── File handling ─────────────────────────────────────── */
 function handleFileSelect(input) {
   const file = input.files[0];
   if (!file) return;
@@ -557,10 +705,12 @@ function removeImage(e) {
   document.getElementById('analyseImageBtn').disabled = true;
 }
 
-// Drag-and-drop
+/* Drag-and-drop */
 const dz = document.getElementById('dropzone');
-['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); }));
-['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragover'); }));
+['dragenter','dragover'].forEach(ev =>
+  dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); }));
+['dragleave','drop'].forEach(ev =>
+  dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragover'); }));
 dz.addEventListener('drop', e => {
   const file = e.dataTransfer.files[0];
   if (!file) return;
@@ -570,20 +720,20 @@ dz.addEventListener('drop', e => {
   handleFileSelect(document.getElementById('fileInput'));
 });
 
-// ── Clear ──────────────────────────────────────────────────
+/* ── Clear ─────────────────────────────────────────────── */
 function clearAll() {
   document.getElementById('barcodeInput').value = '';
   showPlaceholder();
 }
 
-// ── API calls ──────────────────────────────────────────────
+/* ── API calls ─────────────────────────────────────────── */
 async function analyseText() {
   const barcode = document.getElementById('barcodeInput').value.trim();
   if (!barcode) { showToast('Please paste a barcode string first.'); return; }
   const btn = document.getElementById('analyseTextBtn');
   setLoading(btn, true);
   try {
-    const res = await fetch(API + '/api/analyse/text', {
+    const res  = await fetch(API + '/api/analyse/text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ barcode })
@@ -605,7 +755,7 @@ async function analyseImage() {
   try {
     const fd = new FormData();
     fd.append('file', currentFile);
-    const res = await fetch(API + '/api/analyse/image', { method: 'POST', body: fd });
+    const res  = await fetch(API + '/api/analyse/image', { method: 'POST', body: fd });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
     if (data.error && !data.verdict) { showToast(data.error); return; }
@@ -617,107 +767,113 @@ async function analyseImage() {
   }
 }
 
-// ── Render ─────────────────────────────────────────────────
+/* ── Render report ─────────────────────────────────────── */
 function renderReport(d) {
   const container = document.getElementById('results');
   const verdict = d.verdict || 'ERROR';
-  const icons  = { AUTHENTIC:'✅', UNAUTHENTIC:'❌', INCONCLUSIVE:'⚠️', ERROR:'💀' };
+  const icons  = { AUTHENTIC:'\u2705', UNAUTHENTIC:'\u274c', INCONCLUSIVE:'\u26a0\ufe0f', ERROR:'\ud83d\udc80' };
   const labels = {
     AUTHENTIC:    'Document Authentic',
     UNAUTHENTIC:  'Document NOT Authentic',
-    INCONCLUSIVE: 'Inconclusive — Manual Review Required',
+    INCONCLUSIVE: 'Inconclusive \u2014 Manual Review Required',
     ERROR:        'Analysis Error'
   };
-  const conf = typeof d.confidence === 'number' ? d.confidence : 0;
-
-  const signals  = Array.isArray(d.signals) ? d.signals : [];
-  const failSigs = signals.filter(s => !s.passed);
-  const passSigs = signals.filter(s =>  s.passed);
-  const fields   = d.fields || {};
-  const fieldKeys= Object.keys(fields);
-  const anomalies   = d.anomalies     || [];
-  const missing     = d.missing_mandatory || [];
-  const dates       = d.parsed_dates  || {};
-  const genFlags    = d.generator_flags || [];
+  const conf      = typeof d.confidence === 'number' ? d.confidence : 0;
+  const signals   = Array.isArray(d.signals) ? d.signals : [];
+  const failSigs  = signals.filter(s => !s.passed);
+  const passSigs  = signals.filter(s =>  s.passed);
+  const fields    = d.fields || {};
+  const fieldKeys = Object.keys(fields);
+  const anomalies = d.anomalies          || [];
+  const missing   = d.missing_mandatory  || [];
+  const dates     = d.parsed_dates       || {};
+  const genFlags  = d.generator_flags    || [];
 
   let html = '';
 
-  // ── Verdict banner
+  /* Verdict banner */
   html += `<div class="verdict-banner ${escAttr(verdict)}">
-    <div class="verdict-icon">${icons[verdict] || '❓'}</div>
+    <div class="verdict-icon">${icons[verdict] || '\u2753'}</div>
     <div class="verdict-body">
       <div class="verdict-label">${escHtml(verdict)}</div>
       <div class="verdict-title">${escHtml(labels[verdict] || verdict)}</div>
       <div class="verdict-sub">
         IIN: <strong>${escHtml(d.iin||'N/A')}</strong> (${escHtml(d.state_name||'Unknown')})
-        &nbsp;·&nbsp; AAMVA v${String(d.aamva_ver||0).padStart(2,'0')}
-        &nbsp;·&nbsp; ${signals.length} signals
-        ${d.filename ? `&nbsp;·&nbsp; ${escHtml(d.filename)}` : ''}
+        &nbsp;&middot;&nbsp; AAMVA v${String(d.aamva_ver||0).padStart(2,'0')}
+        &nbsp;&middot;&nbsp; ${signals.length} signals
+        ${d.filename ? `&nbsp;&middot;&nbsp; ${escHtml(d.filename)}` : ''}
       </div>
       <div class="confidence-bar-wrap">
         <div class="confidence-bar">
-          <div class="confidence-fill" id="confFill" style="width:0%"></div>
+          <div class="confidence-fill" style="width:0%"></div>
         </div>
         <span class="confidence-pct">${conf.toFixed(1)}%</span>
       </div>
     </div>
   </div>`;
 
-  // ── Hard fail notice
+  /* Hard fail */
   if (d.hard_fail_reason) {
     html += `<div class="hard-fail">
-      <span>🚨</span>
+      <span>&#128680;</span>
       <div><strong>Hard Fail:</strong> <code>${escHtml(d.hard_fail_reason)}</code></div>
     </div>`;
   }
 
-  // ── Generator fingerprint flags (NEW)
+  /* Generator flags */
   if (genFlags.length > 0) {
     let gHtml = '<ul>';
     genFlags.forEach(f => { gHtml += `<li>${escHtml(f)}</li>`; });
     gHtml += '</ul>';
     html += `<div class="gen-flags">
-      <div class="gen-flags-header">⚑ Generator / Fake-ID Fingerprints Detected (${genFlags.length})</div>
+      <div class="gen-flags-header">&#9873; Generator / Fake-ID Fingerprints Detected (${genFlags.length})</div>
       ${gHtml}
     </div>`;
   }
 
-  // ── Scan info bar
+  /* Scan info */
   html += `<div class="scan-info">
-    <span>🕐 ${d.scan_time ? new Date(d.scan_time).toLocaleString() : 'N/A'}</span>
-    <span>📦 Encoding: <code style="font-family:var(--mono);font-size:11px">${escHtml(d.encoding_mode||'unknown')}</code></span>
-    <span>📁 Subfiles: ${d.num_subfiles||0}</span>
+    <span>&#128336; ${d.scan_time ? new Date(d.scan_time).toLocaleString() : 'N/A'}</span>
+    <span>&#128230; Encoding: <code style="font-family:var(--mono);font-size:11px">${escHtml(d.encoding_mode||'unknown')}</code></span>
+    <span>&#128193; Subfiles: ${d.num_subfiles||0}</span>
     <span>Score: ${d.score||0} / ${d.max_score||0}</span>
   </div>`;
 
-  // ── Failed signals
+  /* Failed signals — open by default */
   if (failSigs.length > 0) {
-    html += makeCard('❌ Failed Signals', failSigs.length, 'fail', renderSignals(failSigs));
+    html += makeCard('\u274c Failed Signals', failSigs.length, 'fail',
+      `<div class="card-body-scroll">${renderSignals(failSigs)}</div>`,
+      false);
   }
 
-  // ── Passed signals (collapsed by default)
-  html += makeCard('✅ Passed Signals', passSigs.length, 'pass', renderSignals(passSigs), true);
+  /* Passed signals — collapsed by default */
+  html += makeCard('\u2705 Passed Signals', passSigs.length, 'pass',
+    `<div class="card-body-scroll">${renderSignals(passSigs)}</div>`,
+    true);
 
-  // ── Anomalies
+  /* Anomalies */
   if (anomalies.length > 0) {
     let aHtml = '<ul class="anomaly-list">';
     anomalies.forEach(a => { aHtml += `<li>${escHtml(a)}</li>`; });
     aHtml += '</ul>';
-    html += makeCard('⚠️ Anomalies Detected', anomalies.length, 'fail', aHtml);
+    html += makeCard('\u26a0\ufe0f Anomalies Detected', anomalies.length, 'fail',
+      `<div class="card-body-scroll-sm">${aHtml}</div>`,
+      false);
   }
 
-  // ── Missing mandatory
+  /* Missing mandatory */
   if (missing.length > 0) {
     let mHtml = '<div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px">';
     missing.forEach(m => {
       mHtml += `<code style="font-family:var(--mono);font-size:11px;background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);padding:2px 7px;border-radius:4px">${escHtml(m)}</code>`;
     });
     mHtml += '</div>';
-    html += makeCard('🔴 Missing Mandatory Fields', missing.length, 'fail', mHtml);
+    html += makeCard('&#128308; Missing Mandatory Fields', missing.length, 'fail', mHtml, false);
   }
 
-  // ── Parsed dates
-  if (Object.keys(dates).length > 0) {
+  /* Parsed dates */
+  const dateKeys = Object.keys(dates);
+  if (dateKeys.length > 0) {
     let dHtml = '<div class="dates-row">';
     Object.entries(dates).forEach(([k, v]) => {
       let display = v;
@@ -725,25 +881,27 @@ function renderReport(d) {
       dHtml += `<div class="date-chip"><div class="date-chip-key">${escHtml(k)}</div><div class="date-chip-val">${escHtml(display)}</div></div>`;
     });
     dHtml += '</div>';
-    html += makeCard('📅 Parsed Dates', Object.keys(dates).length, '', dHtml);
+    html += makeCard('&#128197; Parsed Dates', dateKeys.length, '', dHtml, false);
   }
 
-  // ── Header metadata
-  const dlColor  = d.dl_subfile_found ? 'var(--green)' : 'var(--red)';
-  const offColor = d.offsets_valid    ? 'var(--green)' : 'var(--yellow)';
+  /* Header metadata — collapsed */
+  const dlColor  = d.dl_subfile_found    ? 'var(--green)'  : 'var(--red)';
+  const offColor = d.offsets_valid       ? 'var(--green)'  : 'var(--yellow)';
   const encColor = d.encoding_mode === 'binary' ? 'var(--green)' : 'var(--red)';
-  html += makeCard('🔖 Header Metadata', '', '', `<div class="meta-grid">
-    <div class="meta-cell"><div class="meta-key">IIN</div><div class="meta-val">${escHtml(d.iin||'—')}</div></div>
-    <div class="meta-cell"><div class="meta-key">State</div><div class="meta-val">${escHtml(d.state_name||'—')}</div></div>
-    <div class="meta-cell"><div class="meta-key">AAMVA Ver</div><div class="meta-val">v${String(d.aamva_ver||0).padStart(2,'0')}</div></div>
-    <div class="meta-cell"><div class="meta-key">Juris Ver</div><div class="meta-val">v${String(d.juris_ver||0).padStart(2,'0')}</div></div>
-    <div class="meta-cell"><div class="meta-key">Subfiles</div><div class="meta-val">${d.num_subfiles||0}</div></div>
-    <div class="meta-cell"><div class="meta-key">DL Subfile</div><div class="meta-val" style="color:${dlColor}">${d.dl_subfile_found?'Found':'Missing'}</div></div>
-    <div class="meta-cell"><div class="meta-key">Offsets Valid</div><div class="meta-val" style="color:${offColor}">${d.offsets_valid?'Yes':'No'}</div></div>
-    <div class="meta-cell"><div class="meta-key">Encoding</div><div class="meta-val" style="color:${encColor}">${escHtml(d.encoding_mode||'—')}</div></div>
-  </div>`, true);
+  html += makeCard('&#128278; Header Metadata', '', '',
+    `<div class="meta-grid">
+      <div class="meta-cell"><div class="meta-key">IIN</div><div class="meta-val">${escHtml(d.iin||'\u2014')}</div></div>
+      <div class="meta-cell"><div class="meta-key">State</div><div class="meta-val">${escHtml(d.state_name||'\u2014')}</div></div>
+      <div class="meta-cell"><div class="meta-key">AAMVA Ver</div><div class="meta-val">v${String(d.aamva_ver||0).padStart(2,'0')}</div></div>
+      <div class="meta-cell"><div class="meta-key">Juris Ver</div><div class="meta-val">v${String(d.juris_ver||0).padStart(2,'0')}</div></div>
+      <div class="meta-cell"><div class="meta-key">Subfiles</div><div class="meta-val">${d.num_subfiles||0}</div></div>
+      <div class="meta-cell"><div class="meta-key">DL Subfile</div><div class="meta-val" style="color:${dlColor}">${d.dl_subfile_found?'Found':'Missing'}</div></div>
+      <div class="meta-cell"><div class="meta-key">Offsets Valid</div><div class="meta-val" style="color:${offColor}">${d.offsets_valid?'Yes':'No'}</div></div>
+      <div class="meta-cell"><div class="meta-key">Encoding</div><div class="meta-val" style="color:${encColor}">${escHtml(d.encoding_mode||'\u2014')}</div></div>
+    </div>`,
+    true);
 
-  // ── Parsed fields
+  /* Parsed fields — collapsed */
   if (fieldKeys.length > 0) {
     let fHtml = '<div class="fields-grid">';
     fieldKeys.forEach(tag => {
@@ -751,19 +909,23 @@ function renderReport(d) {
       fHtml += `<div class="field-cell">
         <div class="field-tag">${escHtml(tag)}</div>
         <div class="field-label">${escHtml(f.label||'')}</div>
-        <div class="field-val">${escHtml(f.val!=null?f.val:'')}</div>
+        <div class="field-val">${escHtml(f.val!=null?String(f.val):'')}</div>
       </div>`;
     });
     fHtml += '</div>';
-    html += makeCard(`📋 Parsed Fields (${fieldKeys.length})`, fieldKeys.length, '', fHtml, true);
+    html += makeCard(`&#128203; Parsed Fields (${fieldKeys.length})`, fieldKeys.length, '',
+      `<div class="card-body-scroll">${fHtml}</div>`,
+      true);
   }
 
-  // ── Raw JSON
-  html += makeCard('{ } Raw JSON Response', '', '', `<div class="json-block">${escHtml(JSON.stringify(d, null, 2))}</div>`, true);
+  /* Raw JSON — collapsed, inner scroll */
+  html += makeCard('{ } Raw JSON Response', '', '',
+    `<div class="json-block">${escHtml(JSON.stringify(d, null, 2))}</div>`,
+    true);
 
   container.innerHTML = html;
 
-  // Animate confidence bar AFTER DOM insertion
+  /* Animate confidence bar after paint */
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       const fill = container.querySelector('.confidence-fill');
@@ -771,19 +933,28 @@ function renderReport(d) {
     });
   });
 
-  // Card collapse toggle
-  container.querySelectorAll('.card-header').forEach(h => {
-    h.addEventListener('click', () => h.closest('.card').classList.toggle('collapsed'));
-  });
+  /* Wire card collapse — delegated so no rebind needed on re-render */
+  container.addEventListener('click', function onCardClick(e) {
+    const header = e.target.closest('.card-header');
+    if (!header) return;
+    header.closest('.card').classList.toggle('collapsed');
+  }, { once: false });
 }
 
+/* ── Signal rows ───────────────────────────────────────── */
 function renderSignals(sigs) {
-  let html = '<table class="signals-table">';
+  let html = `<table class="signals-table">
+    <colgroup>
+      <col class="col-status">
+      <col class="col-name">
+      <col class="col-detail">
+      <col class="col-weight">
+    </colgroup>`;
   sigs.forEach(s => {
-    const cls   = s.passed ? 'pass' : 'fail';
-    const icon  = s.passed
-      ? '<span class="sig-icon-pass">✔</span>'
-      : '<span class="sig-icon-fail">✖</span>';
+    const cls  = s.passed ? 'pass' : 'fail';
+    const icon = s.passed
+      ? '<span class="sig-icon-pass">\u2714</span>'
+      : '<span class="sig-icon-fail">\u2716</span>';
     html += `<tr>
       <td class="sig-status">${icon}</td>
       <td>
@@ -798,6 +969,7 @@ function renderSignals(sigs) {
   return html;
 }
 
+/* ── Card builder ──────────────────────────────────────── */
 function makeCard(title, count, countCls, bodyHtml, collapsed = false) {
   const countHtml = (count !== '' && count != null)
     ? `<span class="card-count ${countCls}">${count}</span>` : '';
@@ -805,17 +977,22 @@ function makeCard(title, count, countCls, bodyHtml, collapsed = false) {
     <div class="card-header">
       <span class="card-title">${title}</span>
       ${countHtml}
-      <svg class="card-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      <svg class="card-chevron" width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m6 9 6 6 6-6"/>
+      </svg>
     </div>
     <div class="card-body">${bodyHtml}</div>
   </div>`;
 }
 
+/* ── Placeholder ───────────────────────────────────────── */
 function showPlaceholder() {
   document.getElementById('results').innerHTML = `
     <div class="placeholder">
       <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
         <rect x="3" y="14" width="7" height="7" rx="1"/>
         <path d="M14 14h3v3M17 14h3M17 17v3M14 17h3"/>
       </svg>
@@ -824,19 +1001,17 @@ function showPlaceholder() {
     </div>`;
 }
 
+/* ── Helpers ───────────────────────────────────────────── */
 function setLoading(btn, on) {
   btn.classList.toggle('loading', on);
   btn.disabled = on;
 }
-
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 4000);
 }
-
-// Bug fix: escHtml must not double-encode — used for both attr and content
 function escHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -844,7 +1019,7 @@ function escHtml(s) {
 }
 function escAttr(s) { return escHtml(s); }
 
-// ── Health check ───────────────────────────────────────────
+/* ── Health check ──────────────────────────────────────── */
 async function healthCheck() {
   const dot  = document.getElementById('statusDot');
   const text = document.getElementById('statusText');
@@ -852,17 +1027,17 @@ async function healthCheck() {
     const res  = await fetch(API + '/api/health');
     const data = await res.json();
     const ok   = res.ok && (data.status === 'ok' || data.status === 'healthy');
-    dot.style.background  = ok ? 'var(--green)' : 'var(--yellow)';
-    dot.style.boxShadow   = ok ? '0 0 6px var(--green)' : '0 0 6px var(--yellow)';
-    text.textContent      = ok ? 'Online' : 'Degraded';
+    dot.style.background = ok ? 'var(--green)' : 'var(--yellow)';
+    dot.style.boxShadow  = ok ? '0 0 6px var(--green)' : '0 0 6px var(--yellow)';
+    text.textContent     = ok ? 'Online' : 'Degraded';
   } catch {
-    dot.style.background  = 'var(--red)';
-    dot.style.boxShadow   = '0 0 6px var(--red)';
-    text.textContent      = 'Offline';
+    dot.style.background = 'var(--red)';
+    dot.style.boxShadow  = '0 0 6px var(--red)';
+    text.textContent     = 'Offline';
   }
 }
 healthCheck();
-setInterval(healthCheck, 30000);
+setInterval(healthCheck, 30_000);
 </script>
 </body>
 </html>
